@@ -2,30 +2,37 @@ int aa = 0;
 // ****************************** ОГОНЁК ******************************
 int16_t position;
 boolean direction;
+#define SPACE 2
+#define TRAIN_AMOUNT 7
 
-void lighter() {
-  uint8_t space = 2;
-  uint8_t amount = 5;
+CRGB train_colors[TRAIN_AMOUNT];
+
+void train() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    for (int i = 0; i < TRAIN_AMOUNT; i++) train_colors[i] = CHSV(random(0, 7) * 36, 255, 255);
+  }
   fillAll(CRGB::Black);
   if (direction) {
     position++;
-    if (position > NUM_LEDS - 2 - space*amount) {
+    if (position > NUM_LEDS - 2 - SPACE * TRAIN_AMOUNT) {
       direction = false;
     }
   } else {
     position--;
     if (position < 1) {
       direction = true;
+      loadingFlag = true;
     }
   }
-  for (int i=0; i<amount; i++){
-      leds[position+i*space] = CRGB::White;
+  for (int i = 0; i < TRAIN_AMOUNT; i++) {
+    leds[position + i * SPACE] = train_colors[i];
   }
 }
 
 // ****************************** СВЕТЛЯЧКИ ******************************
 #define MAX_SPEED 30
-#define BUGS_AMOUNT NUM_LEDS/4
+#define BUGS_AMOUNT NUM_LEDS/3
 int16_t speed[BUGS_AMOUNT];
 int16_t pos[BUGS_AMOUNT];
 CRGB bugColors[BUGS_AMOUNT];
@@ -60,14 +67,26 @@ void lightBugs() {
 
 // ****************************** ЦВЕТА ******************************
 byte hue;
+byte countcol = 0;
 void colors() {
-  hue += 2;
+  hue += 1;
   CRGB thisColor = CHSV(hue, 255, 255);
-  fillAll(CHSV(hue, 255, 255));
+  for (int i=0; i<NUM_LEDS; i++){
+    if ( i%4==0){
+      leds[i+countcol] = thisColor;
+    }
+    else{
+      leds[i+countcol] = CRGB::Black;
+    }
+  }
+  if (a % 8)countcol++;
+  if (countcol > 3) countcol = 0;
+  //fillAll(CHSV(hue, 255, 255));
 }
 
 // ****************************** РАДУГА ******************************
 void rainbow() {
+  fillAll(CRGB::Black);
   hue += 2;
   for (int i = 0; i < NUM_LEDS; i++)
     leds[i] = CHSV((byte)(hue + i * float(255 / NUM_LEDS)), 255, 255);
@@ -75,6 +94,10 @@ void rainbow() {
 
 // ****************************** КОНФЕТТИ ******************************
 void sparkles() {
+  if (loadingFlag){
+    loadingFlag = false;
+    fillAll(CRGB::Black);
+  }
   byte thisNum = random(0, NUM_LEDS);
   if (getPixColor(thisNum) == 0)
     leds[thisNum] = CHSV(random(0, 255), 255, 255);
@@ -147,54 +170,6 @@ void fade() {
     leds[i].fadeToBlackBy(TRACK_STEP);
   }
 }
-void autoplay_off_anim(int delayy) {
-  loadingFlag = true; // fixed bug(after animation mode don't worked correct)
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB::Red;
-  }
-  FastLED.show();
-  for (int i = NUM_LEDS - 1; i >= 0; i--) {
-    leds[i] = CRGB::Black;
-    delay(delayy);
-    FastLED.show();
-  }
-}
-void autoplay_on_anim(int delayy) {
-  loadingFlag = true; // fixed bug(after animation mode don't worked correct)
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB::Black;
-  }
-  FastLED.show();
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB::Red;
-    delay(delayy);
-    FastLED.show();
-  }
-}
-void autobright_on_anim(int delayy, int maxx) {
-  loadingFlag = true; // fixed bug(after animation mode don't worked correct)
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB::Red;
-  }
-  for (int i = 0; i < maxx; i++) {
-    FastLED.setBrightness(i);
-    delay(delayy);
-    FastLED.show();
-  }
-
-}
-void autobright_off_anim(int delayy, int maxx) {
-  loadingFlag = true; // fixed bug(after animation mode don't worked correct)
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB::Red;
-  }
-  for (int i = maxx; i > 0; i--) {
-    FastLED.setBrightness(i);
-    delay(delayy);
-    FastLED.show();
-  }
-
-}
 #define HUE_START 3     // начальный цвет огня (0 красный, 80 зелёный, 140 молния, 190 розовый)
 #define HUE_GAP 18      // коэффициент цвета огня (чем больше - тем дальше заброс по цвету)
 #define SMOOTH_K 0.15   // коэффициент плавности огня
@@ -227,7 +202,7 @@ void fire1() {
     leds[i] = color;
   }
   for (int i = 13; i < NUM_LEDS; i++) {
-    leds[i] = leds[i%12];
+    leds[i] = leds[i % 12];
   }
   FastLED.show();
 }

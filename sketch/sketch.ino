@@ -3,16 +3,16 @@
 #include "GyverTimer.h"
 #include <EEPROM.h>
 // settings
-#define TRACK_STEP 1 // less - more steps in animation
+#define TRACK_STEP 3 // less - more steps in animation
 #define FIRE_PALETTE 0  // types of fire
 #define AUTOPLAY_TIME 15 // time of change mode
 #define NUM_LEDS 144 // number of leds
 #define NUM_LEDS1 NUM_LEDS/2 // 1/2 number of leds for fire
 #define DATA_PIN 7 // pin of ws2812b 
-#define BRIGHTNESS 15 // std brightness in start
+#define BRIGHTNESS 30 // std brightness in start
 #define MIN_BRIGHTNESS 2 // min brightness for hand setting
 #define MODES_AMOUNT 6 // number of modes
-#define STD_SPEED 8 // speed of animation bigger - slowly
+#define STD_SPEED 1 // speed of animation bigger - slowly
 
 // end
 // leds routins
@@ -28,10 +28,10 @@ float temp_br; // temp brightness for autobright
 boolean DOWN_CL; // long click DOWN
 bool gReverseDirection = false;
 boolean power = 1; // power in start
-boolean autoplay = 0; // autoplay start state
+boolean autoplay = 1; // autoplay start state
 int sped = STD_SPEED;
 int brightness = BRIGHTNESS;
-int mode = 0; // mode start
+int mode = 4; // mode start
 int a = 0;
 byte counter = 0;
 
@@ -75,30 +75,19 @@ void Prev_mode() {
 void ModeTick() { // draw mode
   if (effectTimer.isReady() && power) {
     a++;
-    if (mode < 6 && ((a % sped) == 0)) {
-      switch (mode) {
-        case 1: lightBugs();
-          break;
-        case 2: colors();
-          break;
-        case 3: rainbow();
-          break;
-        case 4: sparkles();
-          break;
-      }
-    }
-    if ( mode == 5 && (a % 2) == 0) {
-      fire1();
-    }
-    if ( mode == 0 && (a % 4) == 0) {
-      lighter();
-    }
+    if ( mode == 0 && (a % (int)(3*sped)) == 0) train();
+    if ( mode == 1 && (a % (int)(6*sped)) == 0) lightBugs();
+    if ( mode == 2 && (a % (int)(4*sped)) == 0) colors();
+    if ( mode == 3 && (a % (int)(4*sped)) == 0) rainbow();
+    if ( mode == 4 && (a % (int)(2*sped)) == 0) sparkles();
+    if ( mode == 5 && (a % (int)(2*sped)) == 0) fire1();
     FastLED.show();
   }
 }
 void autoPlayTick() { // autoplay tick
   if (autoplayTimer.isReady() && autoplay) {// таймер смены режима
     mode++;
+    loadingFlag = true;
     if ( mode >= MODES_AMOUNT) mode = 0;
   }
 }
