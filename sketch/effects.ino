@@ -69,107 +69,65 @@ void lightBugs() {
 byte hue;
 byte countcol = 0;
 void colors() {
+  if (loadingFlag) loadingFlag = false;
   hue += 1;
   CRGB thisColor = CHSV(hue, 255, 255);
-  for (int i=0; i<NUM_LEDS; i++){
-    if ( i%4==0){
-      leds[i+countcol] = thisColor;
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if ( i % 4 == 0) {
+      leds[i + countcol] = thisColor;
     }
-    else{
-      leds[i+countcol] = CRGB::Black;
+    else {
+      leds[i + countcol] = CRGB::Black;
     }
   }
   if (a % 8)countcol++;
   if (countcol > 3) countcol = 0;
-  //fillAll(CHSV(hue, 255, 255));
 }
-
 // ****************************** РАДУГА ******************************
+#define NUM_LEDS_R 24
 void rainbow() {
+  if (loadingFlag) loadingFlag = false;
   fillAll(CRGB::Black);
   hue += 2;
-  for (int i = 0; i < NUM_LEDS; i++)
-    leds[i] = CHSV((byte)(hue + i * float(255 / NUM_LEDS)), 255, 255);
+  for (int i = 0; i <= NUM_LEDS_R; i++)
+    leds[i] = CHSV((byte)(hue + i * float(255 / NUM_LEDS_R)), 255, 255);
+  for (int i = NUM_LEDS_R; i < NUM_LEDS; i++)
+    leds[i] = leds[i % NUM_LEDS_R];
 }
 
 // ****************************** КОНФЕТТИ ******************************
+//int counter = 0;
+boolean dir_sp = true;
 void sparkles() {
-  if (loadingFlag){
+  if (loadingFlag) {
     loadingFlag = false;
     fillAll(CRGB::Black);
+    dir_sp = true;
+    counter = 0;
   }
-  byte thisNum = random(0, NUM_LEDS);
-  if (getPixColor(thisNum) == 0)
+  if (dir_sp) {
+    byte thisNum = random(0, NUM_LEDS);
+    while (getPixColor(thisNum) != 0) thisNum = random(0, NUM_LEDS);
+    counter++;
     leds[thisNum] = CHSV(random(0, 255), 255, 255);
-  fade();
-}
-
-// ****************************** ОГОНЬ ******************************
-#define COOLING  55
-// SPARKING: What chance (out of 255) is there that a new spark will be lit?
-// Higher chance = more roaring fire.  Lower chance = more flickery fire.
-// Default 120, suggested range 50-200.
-#define SPARKING 120
-
-void fire() {
-  random16_add_entropy( random());
-  Fire2012WithPalette(); // run simulation frame, using palette colors
-}
-
-void Fire2012WithPalette()
-{
-  // Array of temperature readings at each simulation cell
-  static byte heat[NUM_LEDS1];
-
-  // Step 1.  Cool down every cell a little
-  for ( int i = 0; i < NUM_LEDS1; i++) {
-    heat[i] = qsub8( heat[i],  random8(0, ((COOLING * 10) / NUM_LEDS) + 2));
-  }
-
-  // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-  for ( int k = NUM_LEDS1 - 1; k >= 2; k--) {
-    heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2] ) / 3;
-  }
-
-  // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-  if ( random8() < SPARKING ) {
-    int y = random8(7);
-    heat[y] = qadd8( heat[y], random8(160, 255) );
-  }
-
-  // Step 4.  Map from heat cells to LED colors
-  for ( int j = 0; j < NUM_LEDS1; j++) {
-    // Scale the heat value from 0-255 down to 0-240
-    // for best results with color palettes.
-    byte colorindex = scale8( heat[j], 240);
-    CRGB color = ColorFromPalette( gPal, colorindex);
-    int pixelnumber;
-    if ( gReverseDirection ) {
-      pixelnumber = (NUM_LEDS - 1) - j;
-    } else {
-      pixelnumber = j;
-    }
-    leds[pixelnumber] = color;
-    leds[(NUM_LEDS - 1) - pixelnumber] = color;
-  }
-}
-
-// *************** ВИНИГРЕТ ***************
-/*void vinigret() {
-  for (int i = 0; i < NUM_LEDS; i++) {
-    if ((uint32_t)getPixColor(i) == 0) {
-
+    if (counter >= NUM_LEDS - 1) {
+      counter = 0;
+      dir_sp = false;
     }
   }
-  }
-*/
-// ****************** СЛУЖЕБНЫЕ ФУНКЦИИ *******************
-void fade() {
-  for (int i = 0; i < NUM_LEDS; i++) {
-    if ((uint32_t)getPixColor(i) == 0) continue;
-    leds[i].fadeToBlackBy(TRACK_STEP);
+  else {
+    byte thisNum = random(0, NUM_LEDS);
+    while (getPixColor(thisNum) == 0) thisNum = random(0, NUM_LEDS);
+    counter++;
+    leds[thisNum] = CRGB::Black;
+    if (counter >= NUM_LEDS - 1) {
+      counter = 0;
+      dir_sp = true;
+    }
   }
 }
+
+
 #define HUE_START 3     // начальный цвет огня (0 красный, 80 зелёный, 140 молния, 190 розовый)
 #define HUE_GAP 18      // коэффициент цвета огня (чем больше - тем дальше заброс по цвету)
 #define SMOOTH_K 0.15   // коэффициент плавности огня
@@ -187,6 +145,7 @@ byte zoneRndValues[ZONE_AMOUNT];
 #define COLOR_DEBTH 3   // цветовая глубина: 1, 2, 3 (в байтах)
 
 void fire1() {
+  if (loadingFlag) loadingFlag = false;
   int val;
   aa++;
   if ((aa % 5) == 0) {
@@ -206,12 +165,28 @@ void fire1() {
   }
   FastLED.show();
 }
-/*void phototocirc(){
-      int val;
-   val=map(analogRead(A6), 360, 900, 0, NUM_LEDS-1);
-   FastLED.clear();
-   for(int i=0; i<val; i++){
-    leds[i]=CRGB::Red;
-   }
-   FastLED.show();
-  }*/
+void snow() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    fillAll(CRGB::Black);
+  }
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if ((uint32_t)getPixColor(i) == 0) continue;
+    leds[i].nscale8(100);
+  }
+  for (int i = 0; i <= 5; i++) {
+    byte thisNum = random(0, NUM_LEDS);
+    while (getPixColor(thisNum) != 0) thisNum = random(0, NUM_LEDS);
+    leds[thisNum] = CHSV(148, 155, 204);
+  }
+  //fillAll(CHSV(148, 155, 204));
+  //delay(10);
+}
+
+// ****************** СЛУЖЕБНЫЕ ФУНКЦИИ *******************
+void fade() {
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if ((uint32_t)getPixColor(i) == 0) continue;
+    leds[i].fadeToBlackBy(TRACK_STEP);
+  }
+}

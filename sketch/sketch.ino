@@ -5,14 +5,14 @@
 // settings
 #define TRACK_STEP 3 // less - more steps in animation
 #define FIRE_PALETTE 0  // types of fire
-#define AUTOPLAY_TIME 15 // time of change mode
+#define AUTOPLAY_TIME 30 // time of change mode
 #define NUM_LEDS 144 // number of leds
 #define NUM_LEDS1 NUM_LEDS/2 // 1/2 number of leds for fire
 #define DATA_PIN 7 // pin of ws2812b 
 #define BRIGHTNESS 30 // std brightness in start
 #define MIN_BRIGHTNESS 2 // min brightness for hand setting
-#define MODES_AMOUNT 6 // number of modes
-#define STD_SPEED 1 // speed of animation bigger - slowly
+#define MODES_AMOUNT 7 // number of modes
+#define STD_SPEED 1 // speed of animation bigger - faster
 
 // end
 // leds routins
@@ -31,7 +31,7 @@ boolean power = 1; // power in start
 boolean autoplay = 1; // autoplay start state
 int sped = STD_SPEED;
 int brightness = BRIGHTNESS;
-int mode = 4; // mode start
+int mode = 0; // mode start
 int a = 0;
 byte counter = 0;
 
@@ -40,6 +40,7 @@ void setup() {
   // add leds
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
   FastLED.setBrightness(  BRIGHTNESS );
+  Serial.begin(9600);
   // seed for random
   randomSeed(analogRead(0));
   //fire palette
@@ -81,6 +82,7 @@ void ModeTick() { // draw mode
     if ( mode == 3 && (a % (int)(4*sped)) == 0) rainbow();
     if ( mode == 4 && (a % (int)(2*sped)) == 0) sparkles();
     if ( mode == 5 && (a % (int)(2*sped)) == 0) fire1();
+    if ( mode == 6 && (a % (int)(12*sped)) == 0) snow();
     FastLED.show();
   }
 }
@@ -88,7 +90,7 @@ void autoPlayTick() { // autoplay tick
   if (autoplayTimer.isReady() && autoplay) {// таймер смены режима
     mode++;
     loadingFlag = true;
-    if ( mode >= MODES_AMOUNT) mode = 0;
+    if ( mode > MODES_AMOUNT) mode = 0;
   }
 }
 void loop()
