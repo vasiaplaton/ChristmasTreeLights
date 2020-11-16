@@ -5,14 +5,14 @@
 // settings
 #define TRACK_STEP 3 // less - more steps in animation
 #define FIRE_PALETTE 0  // types of fire
-#define AUTOPLAY_TIME 30 // time of change mode
+#define AUTOPLAY_TIME 60 // time of change mode
 #define NUM_LEDS 144 // number of leds
 #define NUM_LEDS1 NUM_LEDS/2 // 1/2 number of leds for fire
 #define DATA_PIN 7 // pin of ws2812b 
 #define BRIGHTNESS 30 // std brightness in start
 #define MIN_BRIGHTNESS 2 // min brightness for hand setting
-#define MODES_AMOUNT 7 // number of modes
-#define STD_SPEED 1 // speed of animation bigger - faster
+#define MODES_AMOUNT 10 // number of modes
+#define STD_SPEED 1.5 // speed of animation bigger - faster
 
 // end
 // leds routins
@@ -29,13 +29,16 @@ boolean DOWN_CL; // long click DOWN
 bool gReverseDirection = false;
 boolean power = 1; // power in start
 boolean autoplay = 1; // autoplay start state
-int sped = STD_SPEED;
+boolean slow_mode = false;
 int brightness = BRIGHTNESS;
-int mode = 0; // mode start
+int mode = 1; // mode start
 int a = 0;
 byte counter = 0;
-
-
+// counters
+byte hue;
+byte led_now = 0;
+boolean direction = true;
+int aa = 0;
 void setup() {
   // add leds
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
@@ -76,13 +79,16 @@ void Prev_mode() {
 void ModeTick() { // draw mode
   if (effectTimer.isReady() && power) {
     a++;
-    if ( mode == 0 && (a % (int)(3*sped)) == 0) train();
-    if ( mode == 1 && (a % (int)(6*sped)) == 0) lightBugs();
-    if ( mode == 2 && (a % (int)(4*sped)) == 0) colors();
-    if ( mode == 3 && (a % (int)(4*sped)) == 0) rainbow();
-    if ( mode == 4 && (a % (int)(2*sped)) == 0) sparkles();
-    if ( mode == 5 && (a % (int)(2*sped)) == 0) fire1();
-    if ( mode == 6 && (a % (int)(12*sped)) == 0) snow();
+    if ( mode == 0 && (a % (int)(3 * STD_SPEED)) == 0) train();
+    if ( mode == 1 && (a % (int)(6 * STD_SPEED)) == 0) lightBugs();
+    if ( mode == 2 && (a % (int)(4 * STD_SPEED)) == 0) colors();
+    if ( mode == 3 && (a % (int)(4 * STD_SPEED)) == 0) rainbow();
+    if ( mode == 4 && (a % (int)(2 * STD_SPEED)) == 0) sparkles();
+    if ( mode == 5 && (a % (int)(2 * 1)) == 0) fire1();
+    if ( mode == 6 && (a % (int)(12 * STD_SPEED)) == 0) snow();
+    if ( mode == 7 && (a % (int)(3 * STD_SPEED)) == 0) filling();
+    if ( mode == 8 && (a % (int)(3 * STD_SPEED)) == 0) slow_rainbow();
+    if ( mode == 9 && (a % (int)(20 * STD_SPEED)) == 0) slow_random();
     FastLED.show();
   }
 }
@@ -90,12 +96,34 @@ void autoPlayTick() { // autoplay tick
   if (autoplayTimer.isReady() && autoplay) {// таймер смены режима
     mode++;
     loadingFlag = true;
-    if ( mode > MODES_AMOUNT) mode = 0;
+    direction = true;
+    led_now = 0;
+    if ( mode >= MODES_AMOUNT) mode = 0;
+  }
+  randomSeed(analogRead(0)); // add entropy to random
+}
+
+void serialTick() {
+  if (Serial.available() > 0) {
+    String serial = Serial.readString();
+    if (serial[0] == 's') {
+      if (serial[1] == '1') slow_mode = true;
+      else if (serial[1] == '0') slow_mode = false;
+      else if (serial[1] == 'g') {
+        if (slow_mode) {
+          Serial.print("1");
+        }
+        else {
+          Serial.print("0");
+        }
+      }
+    }
   }
 }
+
 void loop()
 {
   ModeTick();
   autoPlayTick();
-
+  serialTick();
 }

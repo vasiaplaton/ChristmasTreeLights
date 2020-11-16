@@ -1,7 +1,4 @@
-int aa = 0;
 // ****************************** ОГОНЁК ******************************
-int16_t position;
-boolean direction;
 #define SPACE 2
 #define TRAIN_AMOUNT 7
 
@@ -10,23 +7,23 @@ CRGB train_colors[TRAIN_AMOUNT];
 void train() {
   if (loadingFlag) {
     loadingFlag = false;
-    for (int i = 0; i < TRAIN_AMOUNT; i++) train_colors[i] = CHSV(random(0, 7) * 36, 255, 255);
+    for (int i = 0; i < TRAIN_AMOUNT; i++) train_colors[i] = CHSV(random(0, 25) * 10, 255, 255);
   }
   fillAll(CRGB::Black);
   if (direction) {
-    position++;
-    if (position > NUM_LEDS - 2 - SPACE * TRAIN_AMOUNT) {
+    led_now++;
+    if (led_now > NUM_LEDS - 2 - SPACE * TRAIN_AMOUNT) {
       direction = false;
     }
   } else {
-    position--;
-    if (position < 1) {
+    led_now--;
+    if (led_now < 1) {
       direction = true;
       loadingFlag = true;
     }
   }
   for (int i = 0; i < TRAIN_AMOUNT; i++) {
-    leds[position + i * SPACE] = train_colors[i];
+    leds[led_now + i * SPACE] = train_colors[i];
   }
 }
 
@@ -66,22 +63,20 @@ void lightBugs() {
 }
 
 // ****************************** ЦВЕТА ******************************
-byte hue;
-byte countcol = 0;
 void colors() {
   if (loadingFlag) loadingFlag = false;
   hue += 1;
   CRGB thisColor = CHSV(hue, 255, 255);
   for (int i = 0; i < NUM_LEDS; i++) {
     if ( i % 4 == 0) {
-      leds[i + countcol] = thisColor;
+      leds[i + led_now] = thisColor;
     }
     else {
-      leds[i + countcol] = CRGB::Black;
+      leds[i + led_now] = CRGB::Black;
     }
   }
-  if (a % 8)countcol++;
-  if (countcol > 3) countcol = 0;
+  if (a % 8)led_now++;
+  if (led_now > 3) led_now = 0;
 }
 // ****************************** РАДУГА ******************************
 #define NUM_LEDS_R 24
@@ -96,23 +91,20 @@ void rainbow() {
 }
 
 // ****************************** КОНФЕТТИ ******************************
-//int counter = 0;
-boolean dir_sp = true;
 void sparkles() {
   if (loadingFlag) {
     loadingFlag = false;
     fillAll(CRGB::Black);
-    dir_sp = true;
     counter = 0;
   }
-  if (dir_sp) {
+  if (direction) {
     byte thisNum = random(0, NUM_LEDS);
     while (getPixColor(thisNum) != 0) thisNum = random(0, NUM_LEDS);
     counter++;
     leds[thisNum] = CHSV(random(0, 255), 255, 255);
     if (counter >= NUM_LEDS - 1) {
       counter = 0;
-      dir_sp = false;
+      direction = false;
     }
   }
   else {
@@ -122,7 +114,7 @@ void sparkles() {
     leds[thisNum] = CRGB::Black;
     if (counter >= NUM_LEDS - 1) {
       counter = 0;
-      dir_sp = true;
+      direction = true;
     }
   }
 }
@@ -165,6 +157,23 @@ void fire1() {
   }
   FastLED.show();
 }
+
+void filling() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    fillAll(CRGB::Black);
+  }
+  leds[led_now] = direction ? CHSV(hue, 255, 255) : CHSV(0, 0, 0);
+  leds[led_now + 1] = direction ? CHSV(hue, 255, 255) : CHSV(0, 0, 0);
+  leds[led_now + 2] = direction ? CHSV(hue, 255, 255) : CHSV(0, 0, 0);
+  led_now += 3;
+  if (led_now >= NUM_LEDS - 1) {
+    led_now = 0;
+    direction = !direction;
+    hue += 20;
+  }
+}
+
 void snow() {
   if (loadingFlag) {
     loadingFlag = false;
@@ -172,15 +181,45 @@ void snow() {
   }
   for (int i = 0; i < NUM_LEDS; i++) {
     if ((uint32_t)getPixColor(i) == 0) continue;
-    leds[i].nscale8(100);
+    leds[i].nscale8(80);
   }
-  for (int i = 0; i <= 5; i++) {
+  for (int i = 0; i <= 3; i++) {
     byte thisNum = random(0, NUM_LEDS);
     while (getPixColor(thisNum) != 0) thisNum = random(0, NUM_LEDS);
     leds[thisNum] = CHSV(148, 155, 204);
   }
   //fillAll(CHSV(148, 155, 204));
   //delay(10);
+}
+
+void slow_rainbow() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    fillAll(CRGB::Black);
+    hue = 0;
+    counter = 0;
+  }
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if( (i % 4) == 0 ){
+      leds[i] = CHSV(hue, 255, 255);
+      hue += 30;
+      hue += counter/3;
+    }
+  }
+   hue = 0;
+  counter += 1;
+}
+
+void slow_random() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    fillAll(CRGB::Black);
+  }
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if( (i % 4) == 0 ){
+      leds[i] = CHSV(random(1, 5) * 63, 255, 255);
+    }
+  }
 }
 
 // ****************** СЛУЖЕБНЫЕ ФУНКЦИИ *******************
