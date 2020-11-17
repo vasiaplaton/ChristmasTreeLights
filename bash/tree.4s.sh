@@ -15,13 +15,13 @@ for sysdevpath in $(find /sys/bus/usb/devices/usb*/ -name dev); do
     if [ $ID_SERIAL =  "1a86_USB2.0-Serial" ]; then 
         found=true
         name=$devname
-        stty 9600 -F /dev/$devname raw -echo -hupcl
 	fi
 done
 
 if [ "$found" = true ] ; then
-    echo "Fast | bash='echo s0>>/dev/$name' image='$FAST' imageWidth=23 terminal=false"
-    echo "Slow | bash='echo s1>>/dev/$name' image='$SLOW' imageWidth=23 terminal=false"
+    echo "Adress /dev/$name"
+    echo "Fast | bash='stty 9600 -F /dev/$name raw -echo -hupcl && echo s0>>/dev/$name' image='$FAST' imageWidth=23 terminal=false"
+    echo "Slow | bash='stty 9600 -F /dev/$name raw -echo -hupcl && echo s1>>/dev/$name' image='$SLOW' imageWidth=23 terminal=false"
 else
     echo "Off | image='$DISCONNECTED' imageWidth=23"
 fi
