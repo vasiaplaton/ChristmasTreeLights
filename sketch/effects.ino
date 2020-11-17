@@ -191,33 +191,94 @@ void snow() {
   //fillAll(CHSV(148, 155, 204));
   //delay(10);
 }
-
+uint8_t HUE_VAL[NUM_LEDS / 4 + 1];
 void slow_rainbow() {
   if (loadingFlag) {
     loadingFlag = false;
     fillAll(CRGB::Black);
     hue = 0;
     counter = 0;
-  }
-  for (int i = 0; i < NUM_LEDS; i++) {
-    if( (i % 4) == 0 ){
-      leds[i] = CHSV(hue, 255, 255);
-      hue += 30;
-      hue += counter/3;
+    for (int i = 0; i < NUM_LEDS / 4 + 1; i++) {
+      HUE_VAL[i] = i * 30;
     }
   }
-   hue = 0;
-  counter += 1;
+  for (int i = 0; i < NUM_LEDS; i++) {
+    if ( (i % 4) == 0 ) {
+      leds[i] = CHSV(HUE_VAL[i / 4], 255, 255);
+    }
+  }
+  for (int i = 0; i < NUM_LEDS / 4 + 1; i++) {
+    HUE_VAL[i] += 2;
+  }
 }
-
-void slow_random() {
+#define SPEED_STD_LIGHTS 3
+void std_lights() {
   if (loadingFlag) {
     loadingFlag = false;
     fillAll(CRGB::Black);
+    for (int i = 0; i < NUM_LEDS; i++) {
+      if ( (i % 4) == 0 ) {
+        leds[i] = CRGB::White;
+      }
+    }
+    counter = 0;
+    led_now = 0;
   }
   for (int i = 0; i < NUM_LEDS; i++) {
-    if( (i % 4) == 0 ){
-      leds[i] = CHSV(random(1, 5) * 63, 255, 255);
+    if ( (i % 4) == 0 ) {
+      switch (counter) {
+        case 0:
+          leds[i + led_now].r -= SPEED_STD_LIGHTS;
+          leds[i + led_now].g -= SPEED_STD_LIGHTS;
+          leds[i + led_now].b -= SPEED_STD_LIGHTS;
+          if (leds[i + led_now].r < SPEED_STD_LIGHTS) {
+            counter = 1;
+            fillAll(CRGB::Black);
+          }
+          break;
+        case 1:
+          led_now = 1;
+          leds[i + led_now].g += SPEED_STD_LIGHTS;
+          if (leds[i + led_now].g > 255 - SPEED_STD_LIGHTS) counter = 2;
+          break;
+        case 2:
+          leds[i + led_now].g -= SPEED_STD_LIGHTS;
+          if (leds[i + led_now].g < SPEED_STD_LIGHTS) {
+            counter = 3;
+            fillAll(CRGB::Black);
+          }
+          break;
+        case 3:
+          led_now = 2;
+          leds[i + led_now].r += SPEED_STD_LIGHTS;
+          if (leds[i + led_now].r > 255 - SPEED_STD_LIGHTS) counter = 4;
+          break;
+        case 4:
+          leds[i + led_now].r -= SPEED_STD_LIGHTS;
+          if (leds[i + led_now].r < SPEED_STD_LIGHTS) {
+            counter = 5;
+            fillAll(CRGB::Black);
+          }
+          break;
+        case 5:
+          led_now = 3;
+          leds[i + led_now].b += SPEED_STD_LIGHTS;
+          if (leds[i + led_now].b > 255 - SPEED_STD_LIGHTS) counter = 6;
+          break;
+        case 6:
+          leds[i + led_now].b -= SPEED_STD_LIGHTS;
+          if (leds[i + led_now].b < SPEED_STD_LIGHTS) {
+            counter = 7;
+            fillAll(CRGB::Black);
+          }
+          break;
+        case 7:
+          led_now = 0;
+          leds[i + led_now].r += SPEED_STD_LIGHTS;
+          leds[i + led_now].g += SPEED_STD_LIGHTS;
+          leds[i + led_now].b += SPEED_STD_LIGHTS;
+          if (leds[i + led_now].b > 255 - SPEED_STD_LIGHTS) counter = 0;
+      }
     }
   }
 }

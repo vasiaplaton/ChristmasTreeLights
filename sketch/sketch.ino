@@ -12,8 +12,9 @@
 #define BRIGHTNESS 30 // std brightness in start
 #define MIN_BRIGHTNESS 2 // min brightness for hand setting
 #define MODES_AMOUNT 9 // number of modes
-#define MODES_AMOUNT_SLOW 1 // number of modes
+#define MODES_AMOUNT_SLOW 2 // number of modes
 #define STD_SPEED 1 // speed of animation bigger - faster
+#define SLOW_SPEED 1
 
 // end
 // leds routins
@@ -30,13 +31,13 @@ boolean DOWN_CL; // long click DOWN
 bool gReverseDirection = false;
 boolean power = 1; // power in start
 boolean autoplay = 1; // autoplay start state
-boolean slow_mode = false; // mode for ambient light
+boolean slow_mode = true; // mode for ambient light
 int brightness = BRIGHTNESS;
 int mode = 0; // mode start
 int a = 0;
-byte counter = 0;
+uint8_t counter = 0;
 // counters
-byte hue;
+uint8_t hue;
 byte led_now = 0;
 boolean direction = true;
 int aa = 0;
@@ -93,7 +94,8 @@ void ModeTick() { // draw mode
       //if ( mode == 9 && (a % (int)(20 * STD_SPEED)) == 0) slow_random();
     }
     else {
-      if ( mode == 0 && (a % (int)(3 * STD_SPEED)) == 0) slow_rainbow();
+      if ( mode == 0 && (a % (int)(3 * SLOW_SPEED)) == 0) slow_rainbow();
+      if ( mode == 1 && (a % (int)(2 * SLOW_SPEED)) == 0) std_lights();
     }
     FastLED.show();
   }
@@ -118,6 +120,7 @@ void serialTick() {
   if (Serial.available() > 0) {
     String serial = Serial.readString();
     if (serial[0] == 's') {
+      fillAll(CRGB::Black);
       if (serial[1] == '1') slow_mode = true;
       else if (serial[1] == '0') slow_mode = false;
     }

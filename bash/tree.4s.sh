@@ -20,8 +20,8 @@ done
 
 if [ "$found" = true ] ; then
     echo "Adress /dev/$name"
-    echo "Fast | bash='stty 9600 -F /dev/$name raw -echo -hupcl && echo s0>>/dev/$name' image='$FAST' imageWidth=23 terminal=false"
-    echo "Slow | bash='stty 9600 -F /dev/$name raw -echo -hupcl && echo s1>>/dev/$name' image='$SLOW' imageWidth=23 terminal=false"
+    echo "Fast | bash='stty 9600 -F /dev/$name raw -echo -hupcl && sleep 2 && echo s0>>/dev/$name' image='$FAST' imageWidth=23 terminal=false"
+    echo "Slow | bash='stty 9600 -F /dev/$name raw -echo -hupcl && sleep 2 && echo s1>>/dev/$name' image='$SLOW' imageWidth=23 terminal=false"
 else
     echo "Off | image='$DISCONNECTED' imageWidth=23"
 fi
