@@ -42,6 +42,7 @@ GButton BUTTON(BUTTON_PIN, LOW_PULL, NORM_OPEN);
 
 void ButtonTick() {
   BUTTON.tick();
+  BUTTON.setDebounce(0);
   boolean BUTTON_CL = BUTTON.isStep();
   if ( BUTTON_CL) {
     power = !power;
@@ -62,8 +63,7 @@ void ButtonTick() {
         increaseMode();
           break;
       case 4:
-        // autoplay on
-
+        autoplay = !autoplay;
         break;
     }
   }
@@ -183,19 +183,3 @@ void loop()
   serialTick();
   ButtonTick();
 }
-
-/*
-   // next mode func
-  void Next_mode() {
-  if (mode < MODES_AMOUNT - 1) mode++;
-  loadingFlag = true;
-  FastLED.clear();
-  /// myLed.leds[1] = CRGB::Red;
-  }
-  //previous mode func
-  void Prev_mode() {
-  if (mode > 0) mode--;
-  loadingFlag = true;
-  FastLED.clear();
-  /// myLed.leds[1] = CRGB::Blue;
-  }*/
