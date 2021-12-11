@@ -1,1 +1,5 @@
-# Effects for  chain of WS2812B on you Christmas Tree
+# Effects for chain of WS2812B on you Christmas Tree
+![img](/img/1.jpg)
+![img](/img/2.jpg)
+![img](/img/3.jpg)
+![img](/img/4.jpg)
