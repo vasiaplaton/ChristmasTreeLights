@@ -18,19 +18,19 @@ void train() {
   }
   myLed.fillAll(CRGB::Black);
   if (direction) {
-    led_now++;
-    if (led_now > NUM_LEDS - 2 - SPACE * TRAIN_AMOUNT) {
+    ledNow++;
+    if (ledNow > NUM_LEDS - 2 - SPACE * TRAIN_AMOUNT) {
       direction = false;
     }
   } else {
-    led_now--;
-    if (led_now < 1) {
+    ledNow--;
+    if (ledNow < 1) {
       direction = true;
       loadingFlag = true;
     }
   }
   for (int i = 0; i < TRAIN_AMOUNT; i++) {
-    myLed.leds[led_now + i * SPACE] = train_colors[i];
+    myLed.leds[ledNow + i * SPACE] = train_colors[i];
   }
 }
 
@@ -69,6 +69,7 @@ void lightBugs() {
   }
 }
 
+
 // ****************************** ЦВЕТА ******************************
 void colors() {
   if (loadingFlag) {
@@ -79,30 +80,29 @@ void colors() {
   CRGB thisColor = CHSV(hue, 255, 255);
   for (int i = 0; i < NUM_LEDS; i++) {
     if ( i % 4 == 0) {
-      myLed.leds[i + led_now] = thisColor;
+      myLed.leds[i + ledNow] = thisColor;
     }
     else {
-      myLed.leds[i + led_now] = CRGB::Black;
+      myLed.leds[i + ledNow] = CRGB::Black;
     }
   }
-  if (a % 8)led_now++;
-  if (led_now > 3) led_now = 0;
+  if (a % 8)ledNow++;
+  if (ledNow > 3) ledNow = 0;
 }
 
-void waves(){
+void waves() {
   for (int i = 0; i < NUM_LEDS; i++) {
-    int sin_now = 255.0 * abs(sin(radians(i*30+led_now*3)));
-    
+    int sin_now = abs(255 * sin(radians(i * 30 + ledNow * 10)));
     myLed.leds[i] = CHSV(hue, 255, sin_now);
   }
-  led_now++;
+  ledNow++;
   if (a % 50 == 0) hue += 143;
 }
 
-void slow_sparkles(){
+void slow_sparkles() {
   myLed.fillAll(CRGB::Black);
-  for (int i = 0; i < NUM_LEDS/3; i++) {    
-    myLed.leds[i*3+led_now] = CHSV(i*143+hue, 255, 255);
+  for (int i = 0; i < NUM_LEDS / 3; i++) {
+    myLed.leds[i * 3 + ledNow] = CHSV(i * 143 + hue, 255, 255);
   }
   if (a % 2 == 0) hue += 1;
   //if(a % 8 == 0){
@@ -149,6 +149,22 @@ void sparkles() {
       direction = true;
     }
   }
+}
+
+void sparkles1() {
+    if (loadingFlag) {
+    loadingFlag = false;
+    myLed.fillAll(CRGB::Black);
+    counter = 0;
+  }
+  randomSeed(analogRead(0));
+  //if (myLed.getPixColor(thisNum) == 0)
+  byte thisNum = random(0, NUM_LEDS);
+  while (myLed.getPixColor(thisNum) != 0) {
+    thisNum = random(0, NUM_LEDS);
+  }
+  myLed.leds[thisNum] = CHSV(random(0, 255), 255, 255);
+  myLed.fade(20);
 }
 
 
@@ -199,12 +215,12 @@ void filling() {
     loadingFlag = false;
     myLed.fillAll(CRGB::Black);
   }
-  myLed.leds[led_now] = direction ? CHSV(hue, 255, 255) : CHSV(0, 0, 0);
-  myLed.leds[led_now + 1] = direction ? CHSV(hue, 255, 255) : CHSV(0, 0, 0);
-  myLed.leds[led_now + 2] = direction ? CHSV(hue, 255, 255) : CHSV(0, 0, 0);
-  led_now += 3;
-  if (led_now >= NUM_LEDS - 1) {
-    led_now = 0;
+  myLed.leds[ledNow] = direction ? CHSV(hue, 255, 255) : CHSV(0, 0, 0);
+  myLed.leds[ledNow + 1] = direction ? CHSV(hue, 255, 255) : CHSV(0, 0, 0);
+  myLed.leds[ledNow + 2] = direction ? CHSV(hue, 255, 255) : CHSV(0, 0, 0);
+  ledNow += 3;
+  if (ledNow >= NUM_LEDS - 1) {
+    ledNow = 0;
     direction = !direction;
     hue += 20;
   }
@@ -215,17 +231,12 @@ void snow() {
     loadingFlag = false;
     myLed.fillAll(CRGB::Black);
   }
-  for (int i = 0; i < NUM_LEDS; i++) {
-    if ((uint32_t)myLed.getPixColor(i) == 0) continue;
-    myLed.leds[i].nscale8(80);
+  byte thisNum = random(0, NUM_LEDS);
+  while (myLed.getPixColor(thisNum) == 0) {
+    myLed.leds[thisNum] = CRGB::White;
+    thisNum = random(0, NUM_LEDS);
   }
-  for (int i = 0; i <= 3; i++) {
-    byte thisNum = random(0, NUM_LEDS);
-    while (myLed.getPixColor(thisNum) != 0) thisNum = random(0, NUM_LEDS);
-    myLed.leds[thisNum] = CHSV(148, 155, 204);
-  }
-  //myLed.fillAll(CHSV(148, 155, 204));
-  //delay(10);
+  myLed.fade(10);
 }
 uint8_t HUE_VAL[NUM_LEDS / 4 + 1];
 void slow_rainbow() {
@@ -254,68 +265,68 @@ void std_lights() {
     myLed.fillAll(CRGB::Black);
     for (int i = 0; i < NUM_LEDS; i++) {
       if ( (i % 4) == 0 ) {
-        myLed.leds[i + led_now].r -= 255/3;
-          myLed.leds[i + led_now].g -= 255/3;
-          myLed.leds[i + led_now].b -= 255/3;
+        myLed.leds[i + ledNow].r -= 255 / 3;
+        myLed.leds[i + ledNow].g -= 255 / 3;
+        myLed.leds[i + ledNow].b -= 255 / 3;
       }
     }
     counter = 0;
-    led_now = 0;
+    ledNow = 0;
   }
   for (int i = 0; i < NUM_LEDS; i++) {
     if ( (i % 4) == 0 ) {
       switch (counter) {
         case 0:
-          myLed.leds[i + led_now].r -= SPEED_STD_LIGHTS/3;
-          myLed.leds[i + led_now].g -= SPEED_STD_LIGHTS/3;
-          myLed.leds[i + led_now].b -= SPEED_STD_LIGHTS/3;
-          if (myLed.leds[i + led_now].r < SPEED_STD_LIGHTS) {
+          myLed.leds[i + ledNow].r -= SPEED_STD_LIGHTS / 3;
+          myLed.leds[i + ledNow].g -= SPEED_STD_LIGHTS / 3;
+          myLed.leds[i + ledNow].b -= SPEED_STD_LIGHTS / 3;
+          if (myLed.leds[i + ledNow].r < SPEED_STD_LIGHTS) {
             counter = 1;
             myLed.fillAll(CRGB::Black);
           }
           break;
         case 1:
-          led_now = 1;
-          myLed.leds[i + led_now].g += SPEED_STD_LIGHTS;
-          if (myLed.leds[i + led_now].g > 255 - SPEED_STD_LIGHTS) counter = 2;
+          ledNow = 1;
+          myLed.leds[i + ledNow].g += SPEED_STD_LIGHTS;
+          if (myLed.leds[i + ledNow].g > 255 - SPEED_STD_LIGHTS) counter = 2;
           break;
         case 2:
-          myLed.leds[i + led_now].g -= SPEED_STD_LIGHTS;
-          if (myLed.leds[i + led_now].g < SPEED_STD_LIGHTS) {
+          myLed.leds[i + ledNow].g -= SPEED_STD_LIGHTS;
+          if (myLed.leds[i + ledNow].g < SPEED_STD_LIGHTS) {
             counter = 3;
             myLed.fillAll(CRGB::Black);
           }
           break;
         case 3:
-          led_now = 2;
-          myLed.leds[i + led_now].r += SPEED_STD_LIGHTS;
-          if (myLed.leds[i + led_now].r > 255 - SPEED_STD_LIGHTS) counter = 4;
+          ledNow = 2;
+          myLed.leds[i + ledNow].r += SPEED_STD_LIGHTS;
+          if (myLed.leds[i + ledNow].r > 255 - SPEED_STD_LIGHTS) counter = 4;
           break;
         case 4:
-          myLed.leds[i + led_now].r -= SPEED_STD_LIGHTS;
-          if (myLed.leds[i + led_now].r < SPEED_STD_LIGHTS) {
+          myLed.leds[i + ledNow].r -= SPEED_STD_LIGHTS;
+          if (myLed.leds[i + ledNow].r < SPEED_STD_LIGHTS) {
             counter = 5;
             myLed.fillAll(CRGB::Black);
           }
           break;
         case 5:
-          led_now = 3;
-          myLed.leds[i + led_now].b += SPEED_STD_LIGHTS;
-          if (myLed.leds[i + led_now].b > 255 - SPEED_STD_LIGHTS) counter = 6;
+          ledNow = 3;
+          myLed.leds[i + ledNow].b += SPEED_STD_LIGHTS;
+          if (myLed.leds[i + ledNow].b > 255 - SPEED_STD_LIGHTS) counter = 6;
           break;
         case 6:
-          myLed.leds[i + led_now].b -= SPEED_STD_LIGHTS;
-          if (myLed.leds[i + led_now].b < SPEED_STD_LIGHTS) {
+          myLed.leds[i + ledNow].b -= SPEED_STD_LIGHTS;
+          if (myLed.leds[i + ledNow].b < SPEED_STD_LIGHTS) {
             counter = 7;
             myLed.fillAll(CRGB::Black);
           }
           break;
         case 7:
-          led_now = 0;
-          myLed.leds[i + led_now].r += SPEED_STD_LIGHTS/3;
-          myLed.leds[i + led_now].g += SPEED_STD_LIGHTS/3;
-          myLed.leds[i + led_now].b += SPEED_STD_LIGHTS/3;
-          if (myLed.leds[i + led_now].b > (255 - SPEED_STD_LIGHTS)/3) counter = 0;
+          ledNow = 0;
+          myLed.leds[i + ledNow].r += SPEED_STD_LIGHTS / 3;
+          myLed.leds[i + ledNow].g += SPEED_STD_LIGHTS / 3;
+          myLed.leds[i + ledNow].b += SPEED_STD_LIGHTS / 3;
+          if (myLed.leds[i + ledNow].b > (255 - SPEED_STD_LIGHTS) / 3) counter = 0;
       }
     }
   }

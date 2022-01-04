@@ -10,7 +10,7 @@
 #define DATA_PIN 7 // pin of ws2812b 
 #define BRIGHTNESS 30 // std brightness in start
 #define MIN_BRIGHTNESS 2 // min brightness for hand setting
-#define MODES_AMOUNT 9 // number of modes
+#define MODES_AMOUNT 11 // number of modes
 #define MODES_AMOUNT_SLOW 3 // number of modes
 #define STD_SPEED 1 // speed of animation bigger - faster
 #define SLOW_SPEED 1
@@ -25,19 +25,20 @@ boolean loadingFlag = true; // need or not setup for effect
 bool gReverseDirection = false;
 boolean power = 1; // power in start
 boolean autoplay = 1; // autoplay start state
-boolean slow_mode = true; // mode for ambient light
+boolean slowMode = false; // mode for ambient light
 int brightness = BRIGHTNESS;
-int mode =  0; // mode start
+boolean brDirection = true;
+int mode =  10; // mode start
 int a = 0;
 uint8_t counter = 0;
 // counters
 uint8_t hue;
-byte led_now = 0;
+byte ledNow = 0;
 boolean direction = true;
 boolean pause = false;
 
 //buttons
-#define BUTTON_PIN 5
+#define BUTTON_PIN 2
 GButton BUTTON(BUTTON_PIN, LOW_PULL, NORM_OPEN);
 
 void ButtonTick() {
@@ -45,23 +46,25 @@ void ButtonTick() {
   BUTTON.setDebounce(0);
   boolean BUTTON_CL = BUTTON.isStep();
   if ( BUTTON_CL) {
-    power = !power;
+    if (brDirection && brightness < 254) brightness += 5;
+    if (!brDirection && brightness > 6) brightness -= 5;
+
   }
+  if (!BUTTON.isHold() && BUTTON.isHolded()) brDirection = !brDirection;
 
   if (BUTTON.hasClicks()) { // UP has clicked
     byte clicks = BUTTON.getClicks();
     switch (clicks) {
       case 1: // one click
-        slow_mode = !slow_mode;
+        power = !power;
+      case 2: // two click
+        slowMode = !slowMode;
         loadingFlag = true;
         mode = 0;// power off
         break;
-      case 2: // two click
-        pause = !pause;
-        break;
       case 3: // three click
         increaseMode();
-          break;
+        break;
       case 4:
         autoplay = !autoplay;
         break;
@@ -99,10 +102,10 @@ class ledStrip {
       this->bright = bright_get;
       FastLED.setBrightness(bright);
     }
-    void fade() {
+    void fade(int trackStep) {
       for (int i = 0; i < NUM_LEDS; i++) {
         if ((uint32_t)this->getPixColor(i) == 0) continue;
-        this->leds[i].fadeToBlackBy(TRACK_STEP);
+        this->leds[i].fadeToBlackBy(trackStep);
       }
     }
     CRGB *leds = malloc(3);
@@ -123,31 +126,29 @@ void setup() {
 void ModeTick() { // draw mode
   if (effectTimer.isReady() && power && !pause) {
     a++;
-    if (!slow_mode) {
+    if (!slowMode) {
       if ( mode == 0 && (a % (int)(3 * STD_SPEED)) == 0) train();
       if ( mode == 1 && (a % (int)(6 * STD_SPEED)) == 0) lightBugs();
       if ( mode == 2 && (a % (int)(4 * STD_SPEED)) == 0) colors();
       if ( mode == 3 && (a % (int)(4 * STD_SPEED)) == 0) rainbow();
       if ( mode == 4 && (a % (int)(2 * STD_SPEED)) == 0) sparkles();
       if ( mode == 5 && (a % (int)(2 * 1)) == 0) fire1();
-      if ( mode == 6 && (a % (int)(12 * STD_SPEED)) == 0) snow();
+      if ( mode == 6 && (a % (int)(2 * STD_SPEED)) == 0) snow();
       if ( mode == 7 && (a % (int)(3 * STD_SPEED)) == 0) filling();
       if ( mode == 8 && (a % (int)(3 * STD_SPEED)) == 0) slow_rainbow();
-      //if ( mode == 9 && (a % (int)(20 * STD_SPEED)) == 0) slow_random();
+      if ( mode == 9 && (a % (int)(3 * STD_SPEED)) == 0) waves();
+      if ( mode == 10 && (a % (int)(2 * STD_SPEED)) == 0) sparkles1();
     }
     else {
       if ( mode == 0 && (a % (int)(3 * SLOW_SPEED)) == 0) slow_rainbow();
       if ( mode == 1 && (a % (int)(2 * SLOW_SPEED)) == 0) std_lights();
-      //if ( mode == 2 && (a % (int)(STD_SPEED)) == 0) waves();
       if ( mode == 2 && (a % (int)(STD_SPEED)) == 0) slow_sparkles();
     }
     FastLED.show();
   }
 }
 void autoPlayTick() { // autoplay tick
-  if (autoplayTimer.isReady() && autoplay) {// таймер смены режима
-    increaseMode();
-  }
+  if (autoplayTimer.isReady() && autoplay) increaseMode();
   randomSeed(analogRead(0)); // add entropy to random
 }
 
@@ -155,8 +156,8 @@ void increaseMode() {
   mode++;
   loadingFlag = true;
   direction = true;
-  led_now = 0;
-  if (!slow_mode) {
+  ledNow = 0;
+  if (!slowMode) {
     if ( mode >= MODES_AMOUNT) mode = 0;
   }
   else {
@@ -170,8 +171,10 @@ void serialTick() {
     if (serial[0] == 's') {
       myLed.fillAll(CRGB::Black);
       loadingFlag = true;
-      if (serial[1] == '1') slow_mode = true;
-      else if (serial[1] == '0') slow_mode = false;
+      if (serial[1] == '1') slowMode = true;
+      else if (serial[1] == '0') slowMode = false;
+      loadingFlag = true;
+      mode = 0;
     }
   }
 }
